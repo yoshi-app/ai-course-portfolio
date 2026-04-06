@@ -41,15 +41,15 @@
       </div>
       <div class="hero-stats">
         <div class="stat">
-          <span class="stat-number">2</span>
+          <span class="stat-number" id="stat-courses">-</span>
           <span class="stat-label">講座シリーズ</span>
         </div>
         <div class="stat">
-          <span class="stat-number">6</span>
+          <span class="stat-number" id="stat-sessions">-</span>
           <span class="stat-label">セッション</span>
         </div>
         <div class="stat">
-          <span class="stat-number">30+</span>
+          <span class="stat-number" id="stat-files">-</span>
           <span class="stat-label">生成資料数</span>
         </div>
       </div>
@@ -422,6 +422,14 @@
     lightbox.addEventListener('click', e => {
       if (e.target !== lightboxImg) lightbox.classList.remove('active');
     });
+
+    // Auto-count stats from page content
+    const courseCount = document.querySelectorAll('.course-card').length;
+    const sessionCount = document.querySelectorAll('.session').length;
+    const fileCount = document.querySelectorAll('.file-tag').length;
+    document.getElementById('stat-courses').textContent = courseCount;
+    document.getElementById('stat-sessions').textContent = sessionCount;
+    document.getElementById('stat-files').textContent = fileCount + '+';
 
     // Scroll reveal
     const observer = new IntersectionObserver(entries => {
