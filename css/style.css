@@ -403,6 +403,28 @@ a {
   color: var(--gray-600);
 }
 
+/* Course preview image */
+.course-preview {
+  padding: 0 40px 24px;
+  text-align: center;
+}
+
+.course-preview img {
+  width: 100%;
+  max-width: 640px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow);
+  margin: 0 auto;
+}
+
+.preview-caption {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  margin-top: 8px;
+}
+
 /* Sessions */
 .session-list {
   padding: 0 40px;
