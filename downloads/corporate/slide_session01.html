@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第1回：生成AIの基本とプロンプトの型 | 生成AI導入研修</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1B2A4A;
+  --teal: #2EC4B6;
+  --gray-bg: #F0F2F5;
+  --work-bg: #E6F8F7;
+}
+
+html, body {
+  background: #111827;
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', 'Meiryo', sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 16px;
+  gap: 10px;
+}
+
+.stage {
+  width: 100%;
+  max-width: 1024px;
+}
+
+.progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; margin-bottom: 10px; }
+.progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.3s ease; }
+
+/* 16:9 スライドラッパー */
+.slide-wrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+}
+.slide.active { display: flex; }
+
+/* 方眼グリッド背景 */
+.grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(46,196,182,0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46,196,182,0.1) 1px, transparent 1px);
+  background-size: 4% 7.1%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== 表紙スライド ===== */
+.slide-cover {
+  background: var(--navy);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6% 10%;
+}
+.cover-badge {
+  font-size: clamp(11px, 1.3vw, 14px);
+  color: var(--teal);
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-bottom: 3%;
+  position: relative; z-index: 1;
+}
+.cover-title {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.35;
+  margin-bottom: 3%;
+  position: relative; z-index: 1;
+}
+.cover-divider {
+  width: 5vw;
+  height: 3px;
+  background: var(--teal);
+  margin: 0 auto 3%;
+  position: relative; z-index: 1;
+}
+.cover-sub {
+  font-size: clamp(16px, 2vw, 22px);
+  color: var(--teal);
+  margin-bottom: 4%;
+  position: relative; z-index: 1;
+}
+.cover-meta {
+  font-size: clamp(13px, 1.5vw, 17px);
+  color: rgba(255,255,255,0.6);
+  line-height: 1.8;
+  position: relative; z-index: 1;
+}
+
+/* ===== 通常スライド ===== */
+.slide-content {
+  background: var(--gray-bg);
+  padding: 5% 6% 9%;
+}
+
+/* 見出し（左ティール縦線） */
+.slide-title {
+  border-left: 0.55vw solid var(--teal);
+  padding-left: 1.5%;
+  font-size: clamp(18px, 2.7vw, 30px);
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 4%;
+  line-height: 1.3;
+  width: 100%;
+  position: relative; z-index: 1;
+}
+
+/* 箇条書き */
+.bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3%;
+  flex: 1;
+  width: 100%;
+  position: relative; z-index: 1;
+}
+.bullet {
+  display: flex;
+  gap: 1.2%;
+  font-size: clamp(14px, 2.1vw, 22px);
+  line-height: 1.6;
+  color: var(--navy);
+  align-items: flex-start;
+  width: 100%;
+}
+.dot {
+  flex-shrink: 0;
+  width: clamp(7px, 0.8vw, 9px);
+  height: clamp(7px, 0.8vw, 9px);
+  border-radius: 50%;
+  background: var(--teal);
+  margin-top: 0.75vw;
+}
+.bstrong { font-weight: 700; }
+
+/* 強調ボックス */
+.emph {
+  background: var(--navy);
+  color: #fff;
+  padding: 1.5% 2%;
+  border-radius: 0.4vw;
+  font-size: clamp(13px, 1.8vw, 20px);
+  font-weight: 600;
+  width: 100%;
+  position: relative; z-index: 1;
+  margin-top: 2%;
+}
+
+/* 4要素グリッド */
+.four-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2%;
+  flex: 1;
+  width: 100%;
+  position: relative; z-index: 1;
+}
+.four-item {
+  background: #fff;
+  border-radius: 0.5vw;
+  padding: 2.5% 3%;
+  border-top: 0.4vw solid var(--teal);
+  display: flex;
+  flex-direction: column;
+  gap: 6%;
+}
+.four-label {
+  font-size: clamp(12px, 1.5vw, 17px);
+  font-weight: 800;
+  color: var(--teal);
+}
+.four-text {
+  font-size: clamp(12px, 1.65vw, 18px);
+  color: var(--navy);
+  line-height: 1.55;
+}
+
+/* Before / After */
+.ba-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2%;
+  position: relative; z-index: 1;
+}
+.ba-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2%;
+  flex: 1;
+}
+.ba-box { padding: 2.5% 3%; border-radius: 0.5vw; }
+.ba-before { background: rgba(27,42,74,0.07); border: 0.12vw solid rgba(27,42,74,0.2); }
+.ba-after  { background: rgba(46,196,182,0.1); border: 0.12vw solid var(--teal); }
+.ba-label {
+  font-size: clamp(11px, 1.3vw, 15px);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5%;
+  display: block;
+}
+.ba-before .ba-label { color: var(--navy); }
+.ba-after  .ba-label { color: var(--teal); }
+.ba-text { font-size: clamp(12px, 1.65vw, 18px); line-height: 1.6; color: var(--navy); }
+
+/* ===== ワークスライド ===== */
+.slide-work {
+  background: var(--work-bg);
+  padding: 5% 6% 4%;
+}
+.work-badge {
+  position: absolute;
+  top: 4.5%;
+  right: 4%;
+  background: var(--teal);
+  color: #fff;
+  padding: 0.8% 2%;
+  border-radius: 2vw;
+  font-size: clamp(11px, 1.35vw, 15px);
+  font-weight: 700;
+  z-index: 2;
+}
+.steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3%;
+  flex: 1;
+  width: 100%;
+  position: relative; z-index: 1;
+  margin-bottom: 3%;
+}
+.step {
+  display: flex;
+  gap: 1.5%;
+  align-items: flex-start;
+  font-size: clamp(14px, 2.1vw, 22px);
+  line-height: 1.6;
+  color: var(--navy);
+  width: 100%;
+}
+.step-num {
+  flex-shrink: 0;
+  background: var(--navy);
+  color: #fff;
+  width: clamp(20px, 2.4vw, 28px);
+  height: clamp(20px, 2.4vw, 28px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(10px, 1.2vw, 14px);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 0.15vw;
+}
+.check-row {
+  display: flex;
+  gap: 1%;
+  align-items: flex-start;
+  background: rgba(27,42,74,0.08);
+  padding: 1.5% 2%;
+  border-radius: 0.4vw;
+  width: 100%;
+  position: relative; z-index: 1;
+}
+.check-icon { flex-shrink: 0; font-size: clamp(13px, 1.6vw, 18px); }
+.check-text { font-size: clamp(13px, 1.7vw, 19px); color: var(--navy); font-weight: 600; line-height: 1.55; }
+
+/* フッター */
+.slide-footer {
+  position: absolute;
+  bottom: 2%;
+  left: 6%;
+  right: 6%;
+  font-size: clamp(9px, 1vw, 11px);
+  color: rgba(27,42,74,0.35);
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+/* ===== ナビゲーション ===== */
+.nav { display: flex; align-items: center; gap: 14px; }
+.nav-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.22); }
+.nav-counter { color: rgba(255,255,255,0.7); font-size: 13px; min-width: 60px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="slide-wrap">
+
+    <!-- 1: 表紙 -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">生成AI導入研修 〜 ChatGPTを業務に活かす</div>
+      <div class="cover-title">第1回：生成AIの基本と<br>プロンプトの型</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">～「なんとなく」から「型で伝える」へ～</div>
+      <div class="cover-meta">対象：企業の一般社員（営業・事務・企画職）　／　90分</div>
+    </div>
+
+    <!-- 2: 研修の全体像 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">研修の全体像「体験 → 型化 → 定着」</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">第1回：</span>体験から型化への入口（今日）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">第2回：</span>型を業務文書に応用（型化）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">第3回：</span>組織・チームへの定着</span></li>
+        <li class="bullet"><span class="dot"></span><span>日本企業の生成AI導入率41.2%（JUAS 2025）——同業他社の半数近くが動き出している</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>2 / 15</span></div>
+    </div>
+
+    <!-- 3: 生成AIとChatGPTとは -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">生成AIとChatGPTとは</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">生成AI：</span>大量テキストから学習し、新しいテキストを生成する技術</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">ChatGPT：</span>OpenAI社のLLMベースの対話型AIサービス（2022年11月公開）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">主な活用領域：</span>文書作成・要約・翻訳・アイデア出し・コード生成の5つ</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>3 / 15</span></div>
+    </div>
+
+    <!-- 4: 自己流活用の2つの誤解 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">自己流活用の2つの誤解</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">誤解①「AIが完璧な文書を作ってくれる」</span>→ AIは下書きが得意。事実確認・文体調整・責任は人間が担う</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">誤解②「英語の方が精度が高い」</span>→ 日本語でも十分。重要なのは言語ではなく指示の構造</span></li>
+        <li class="bullet"><span class="dot"></span><span>「型を知らないだけ」——型を覚えれば再現性のある使い方ができるようになる</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>4 / 15</span></div>
+    </div>
+
+    <!-- 5: WORK 今日の目標確認 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 2分　個人ワーク</div>
+      <div class="slide-title">今日の目標確認</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>研修ガイドの目標確認欄を開く</span></li>
+        <li class="step"><span class="step-num">2</span><span>今日の目標を自分の言葉で1行で書く</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「何を得たいか」まで書けているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>5 / 15</span></div>
+    </div>
+
+    <!-- 6: プロンプトの4要素 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">プロンプトの4要素</div>
+      <div class="four-grid">
+        <div class="four-item">
+          <div class="four-label">役割（Role）</div>
+          <div class="four-text">AIに「誰として動くか」を伝える<br>——文体・トーン・視点が変わる</div>
+        </div>
+        <div class="four-item">
+          <div class="four-label">文脈（Context）</div>
+          <div class="four-text">誰に・何のために・どんな状況か<br>——AIが状況を理解して答える</div>
+        </div>
+        <div class="four-item">
+          <div class="four-label">指示（Instruction）</div>
+          <div class="four-text">何をどうするか＋条件を明示<br>——「動詞＋条件」がセット</div>
+        </div>
+        <div class="four-item">
+          <div class="four-label">出力形式（Output Format）</div>
+          <div class="four-text">形式・分量・構成<br>——毎回同じ形で安定した出力が返る</div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>セクション2｜プロンプトの型と実践</span><span>6 / 15</span></div>
+    </div>
+
+    <!-- 7: Before/After比較 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">Before / After 比較</div>
+      <div class="ba-wrap">
+        <div class="ba-grid">
+          <div class="ba-box ba-before">
+            <span class="ba-label">BEFORE｜自己流</span>
+            <div class="ba-text">「議事録を要約して」<br><br>AIは誰が読む・何項目・どのくらいの長さかわからない</div>
+          </div>
+          <div class="ba-box ba-after">
+            <span class="ba-label">AFTER｜構造化</span>
+            <div class="ba-text">「あなたは経営企画部のアシスタントです。決定事項・TODO・次回議題の3項目で、箇条書き形式で要約してください」</div>
+          </div>
+        </div>
+        <div class="emph" style="margin-top:0;">構造化指示により出力品質が平均57.7%向上（ATLASベンチマーク）</div>
+      </div>
+      <div class="slide-footer"><span>セクション2｜プロンプトの型と実践</span><span>7 / 15</span></div>
+    </div>
+
+    <!-- 8: 業界事例 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">業界事例——型を使うと何が変わるか</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">みずほFG：</span>資料作成1〜2時間 → 約10分に短縮</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">SMBC：</span>月間数千時間相当の生産性向上</span></li>
+        <li class="bullet"><span class="dot"></span><span>起点はメール・議事録という「身近な業務」からの積み重ね</span></li>
+        <li class="bullet"><span class="dot"></span><span>「型を使うと品質が安定し、業務スピードが劇的に変わる」</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション2｜プロンプトの型と実践</span><span>8 / 15</span></div>
+    </div>
+
+    <!-- 9: WORK1 自己流プロンプト改善 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 15分　ペアワーク</div>
+      <div class="slide-title">ワーク1　自己流プロンプト改善</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>普段使っているプロンプトを1つ取り出す</span></li>
+        <li class="step"><span class="step-num">2</span><span>4要素に分解し、不足している要素を特定する</span></li>
+        <li class="step"><span class="step-num">3</span><span>不足要素を補って書き直し、ペアで共有・フィードバック</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「役割」と「出力形式」が入っているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション2｜プロンプトの型と実践</span><span>9 / 15</span></div>
+    </div>
+
+    <!-- 10: Few-shotとは -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">Few-shotとは</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">Zero-shot：</span>例なしでAIに指示する方法——汎用的な出力になりがち</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">Few-shot：</span>お手本（例）を添えてAIに指示する方法——文脈をAIが理解する</span></li>
+        <li class="bullet"><span class="dot"></span><span>例を1つ添えるだけで、文体・フォーマットの一致度が劇的に上がる</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション3｜Few-shotとプロンプト改善</span><span>10 / 15</span></div>
+    </div>
+
+    <!-- 11: Few-shotのコツ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">Few-shotのコツ</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>例の数より「質とタスクへの近さ」が重要——増やしすぎると逆効果になる場合もある</span></li>
+        <li class="bullet"><span class="dot"></span><span>推奨：良い例を1〜3個（「Few-shot Dilemma」研究より）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">効果的な場面：</span>文体の統一・フォーマット指定・専門用語の使用</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション3｜Few-shotとプロンプト改善</span><span>11 / 15</span></div>
+    </div>
+
+    <!-- 12: WORK2 Few-shotプロンプト作成 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 13分　個人ワーク</div>
+      <div class="slide-title">ワーク2　Few-shotプロンプト作成</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>3つの課題（①顧客提案メール／②議事録要約／③月次レポート）から1つ選ぶ</span></li>
+        <li class="step"><span class="step-num">2</span><span>Few-shotを組み込んだプロンプトを作成し、ChatGPTで実行する</span></li>
+        <li class="step"><span class="step-num">3</span><span>Zero-shotとの出力差を比較する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：文体・フォーマットの統一感が上がったか</span>
+      </div>
+      <div class="slide-footer"><span>セクション3｜Few-shotとプロンプト改善</span><span>12 / 15</span></div>
+    </div>
+
+    <!-- 13: 今日の3ポイント -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日の3ポイント</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>①プロンプトは4要素（役割・文脈・指示・出力形式）で構成する</span></li>
+        <li class="bullet"><span class="dot"></span><span>②Few-shotでお手本を見せると精度が上がる</span></li>
+        <li class="bullet"><span class="dot"></span><span>③自己流が悪いのではなく、型を知ると再現性が上がる</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>13 / 15</span></div>
+    </div>
+
+    <!-- 14: 「70点ドラフト」の考え方 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">「70点ドラフト」の考え方</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>AIの出力は70点のたたき台——「完璧な完成品」を求めない</span></li>
+        <li class="bullet"><span class="dot"></span><span>事実確認・社内文体調整・最終責任は人間が担う</span></li>
+        <li class="bullet"><span class="dot"></span><span>「型を使いこなす」＝AIと人間の最適な役割分担</span></li>
+      </ul>
+      <div class="emph">AIは下書きの「速さ」を提供する。品質の「責任」は人間が持つ。</div>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>14 / 15</span></div>
+    </div>
+
+    <!-- 15: WORK 振り返り記入 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 5分　個人ワーク</div>
+      <div class="slide-title">振り返り記入</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>振り返り欄に今日のポイントを3つ書く</span></li>
+        <li class="step"><span class="step-num">2</span><span>明日の業務で試したいプロンプトの構想を1つ書く</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「何の業務に・どう使うか」まで書けているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>15 / 15</span></div>
+    </div>
+
+  </div><!-- /slide-wrap -->
+</div><!-- /stage -->
+
+<nav class="nav">
+  <button class="nav-btn" id="prev">&#8592;</button>
+  <span class="nav-counter" id="counter">1 / 15</span>
+  <button class="nav-btn" id="next">&#8594;</button>
+</nav>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+const total = slides.length;
+let current = 0;
+
+function show(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${total}`;
+  progress.style.width = `${((current + 1) / total) * 100}%`;
+}
+
+document.getElementById('prev').addEventListener('click', () => show(current - 1));
+document.getElementById('next').addEventListener('click', () => show(current + 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+});
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+});
+show(0);
+</script>
+</body>
+</html>

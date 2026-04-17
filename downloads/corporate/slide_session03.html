@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第3回：業務フロー改善と活用計画 | 生成AI導入研修</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1B2A4A;
+  --teal: #2EC4B6;
+  --gray-bg: #F0F2F5;
+  --work-bg: #E6F8F7;
+}
+
+html, body {
+  background: #111827;
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', 'Meiryo', sans-serif;
+}
+body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 16px; gap: 10px;
+}
+.stage { width: 100%; max-width: 1024px; }
+.progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; margin-bottom: 10px; }
+.progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.3s ease; }
+
+.slide-wrap {
+  position: relative; width: 100%; padding-bottom: 56.25%;
+  overflow: hidden; border-radius: 6px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.slide { position: absolute; inset: 0; display: none; flex-direction: column; }
+.slide.active { display: flex; }
+
+.grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(46,196,182,0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46,196,182,0.1) 1px, transparent 1px);
+  background-size: 4% 7.1%;
+  pointer-events: none; z-index: 0;
+}
+
+/* 表紙 */
+.slide-cover { background: var(--navy); align-items: center; justify-content: center; text-align: center; padding: 6% 10%; }
+.cover-badge { font-size: clamp(11px, 1.3vw, 14px); color: var(--teal); letter-spacing: 0.1em; font-weight: 600; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.35; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-divider { width: 5vw; height: 3px; background: var(--teal); margin: 0 auto 3%; position: relative; z-index: 1; }
+.cover-sub { font-size: clamp(16px, 2vw, 22px); color: var(--teal); margin-bottom: 4%; position: relative; z-index: 1; }
+.cover-meta { font-size: clamp(13px, 1.5vw, 17px); color: rgba(255,255,255,0.6); line-height: 1.8; position: relative; z-index: 1; }
+
+/* 通常スライド */
+.slide-content { background: var(--gray-bg); padding: 5% 6% 9%; }
+.slide-title {
+  border-left: 0.55vw solid var(--teal); padding-left: 1.5%;
+  font-size: clamp(18px, 2.7vw, 30px); font-weight: 700; color: var(--navy);
+  margin-bottom: 4%; line-height: 1.3; width: 100%; position: relative; z-index: 1;
+}
+.bullets { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.bullet { display: flex; gap: 1.2%; font-size: clamp(14px, 2.1vw, 22px); line-height: 1.6; color: var(--navy); align-items: flex-start; width: 100%; }
+.dot { flex-shrink: 0; width: clamp(7px, 0.8vw, 9px); height: clamp(7px, 0.8vw, 9px); border-radius: 50%; background: var(--teal); margin-top: 0.75vw; }
+.bstrong { font-weight: 700; }
+
+/* リストカード（3大リスク、ゴール等） */
+.card-list { display: flex; flex-direction: column; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.card-item { display: flex; gap: 1.5%; align-items: flex-start; background: #fff; border-radius: 0.5vw; padding: 1.8% 2%; border-left: 0.4vw solid var(--teal); flex: 1; }
+.card-num { flex-shrink: 0; background: var(--navy); color: #fff; width: clamp(20px, 2.4vw, 28px); height: clamp(20px, 2.4vw, 28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 1.2vw, 14px); font-weight: 700; }
+.card-body { font-size: clamp(13px, 1.8vw, 20px); color: var(--navy); line-height: 1.5; }
+.card-body strong { font-weight: 700; }
+
+/* 3軸グリッド */
+.axis-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.axis-item { background: #fff; border-radius: 0.5vw; padding: 2.5% 2.5%; border-top: 0.4vw solid var(--teal); display: flex; flex-direction: column; gap: 8%; }
+.axis-label { font-size: clamp(12px, 1.5vw, 17px); font-weight: 800; color: var(--teal); }
+.axis-text { font-size: clamp(12px, 1.55vw, 17px); color: var(--navy); line-height: 1.55; }
+
+/* 実績事例 */
+.case-list { flex: 1; width: 100%; display: flex; flex-direction: column; gap: 2%; position: relative; z-index: 1; }
+.case-item { display: flex; gap: 2%; align-items: center; background: #fff; border-radius: 0.5vw; padding: 1.8% 2.5%; flex: 1; }
+.case-org { flex-shrink: 0; min-width: 13%; font-size: clamp(13px, 1.7vw, 19px); font-weight: 800; color: var(--navy); }
+.case-result { font-size: clamp(13px, 1.8vw, 20px); color: #444; border-left: 0.3vw solid var(--teal); padding-left: 2%; }
+
+/* ガイドライン分類 */
+.guide-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2%; width: 100%; position: relative; z-index: 1; margin-bottom: 3%; }
+.guide-item { border-radius: 0.5vw; padding: 2% 2.5%; }
+.guide-ok  { background: rgba(46,196,182,0.12); border: 0.12vw solid var(--teal); }
+.guide-ng  { background: rgba(200,50,50,0.08); border: 0.12vw solid rgba(200,50,50,0.3); }
+.guide-chk { background: rgba(255,180,0,0.1); border: 0.12vw solid rgba(200,140,0,0.3); }
+.guide-label { font-size: clamp(12px, 1.5vw, 17px); font-weight: 800; margin-bottom: 1%; }
+.guide-ok .guide-label  { color: var(--teal); }
+.guide-ng .guide-label  { color: #c03030; }
+.guide-chk .guide-label { color: #8a6000; }
+.guide-desc { font-size: clamp(12px, 1.5vw, 16px); color: var(--navy); line-height: 1.5; }
+
+/* 3STEP フロー */
+.step-flow { display: flex; gap: 1%; align-items: center; flex: 1; width: 100%; position: relative; z-index: 1; }
+.step-box { flex: 1; background: #fff; border-radius: 0.5vw; padding: 3% 2%; text-align: center; border-top: 0.4vw solid var(--teal); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8%; height: 100%; }
+.step-box-num   { font-size: clamp(11px, 1.3vw, 15px); font-weight: 800; color: var(--teal); }
+.step-box-title { font-size: clamp(13px, 1.7vw, 19px); font-weight: 700; color: var(--navy); line-height: 1.3; }
+.step-box-sub   { font-size: clamp(11px, 1.3vw, 14px); color: #666; line-height: 1.4; }
+.step-arrow { font-size: clamp(16px, 2vw, 24px); color: var(--teal); flex-shrink: 0; }
+
+/* ワークスライド */
+.slide-work { background: var(--work-bg); padding: 5% 6% 4%; }
+.work-badge { position: absolute; top: 4.5%; right: 4%; background: var(--teal); color: #fff; padding: 0.8% 2%; border-radius: 2vw; font-size: clamp(11px, 1.35vw, 15px); font-weight: 700; z-index: 2; }
+.steps { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; margin-bottom: 3%; }
+.step { display: flex; gap: 1.5%; align-items: flex-start; font-size: clamp(14px, 2.1vw, 22px); line-height: 1.6; color: var(--navy); width: 100%; }
+.step-num { flex-shrink: 0; background: var(--navy); color: #fff; width: clamp(20px, 2.4vw, 28px); height: clamp(20px, 2.4vw, 28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 1.2vw, 14px); font-weight: 700; margin-top: 0.15vw; }
+.check-row { display: flex; gap: 1%; align-items: flex-start; background: rgba(27,42,74,0.08); padding: 1.5% 2%; border-radius: 0.4vw; width: 100%; position: relative; z-index: 1; }
+.check-icon { flex-shrink: 0; font-size: clamp(13px, 1.6vw, 18px); }
+.check-text { font-size: clamp(13px, 1.7vw, 19px); color: var(--navy); font-weight: 600; line-height: 1.55; }
+
+.slide-footer { position: absolute; bottom: 2%; left: 6%; right: 6%; font-size: clamp(9px, 1vw, 11px); color: rgba(27,42,74,0.35); display: flex; justify-content: space-between; z-index: 1; }
+
+.nav { display: flex; align-items: center; gap: 14px; }
+.nav-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.nav-btn:hover { background: rgba(255,255,255,0.22); }
+.nav-counter { color: rgba(255,255,255,0.7); font-size: 13px; min-width: 60px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="slide-wrap">
+
+    <!-- 1: 表紙 -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">生成AI導入研修 〜 ChatGPTを業務に活かす</div>
+      <div class="cover-title">第3回：業務フロー改善と活用計画</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">～「使える」から「使いこなす」組織へ～</div>
+      <div class="cover-meta">対象：企業の一般社員（営業・事務・企画職）　／　90分</div>
+    </div>
+
+    <!-- 2: 3回の旅程 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">3回の旅程「体験 → 型化 → 定着」</div>
+      <div class="step-flow">
+        <div class="step-box">
+          <div class="step-box-num">第1回</div>
+          <div class="step-box-title">「型」を知る</div>
+          <div class="step-box-sub">体験から型化への入口</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-box">
+          <div class="step-box-num">第2回</div>
+          <div class="step-box-title">「型」を使う</div>
+          <div class="step-box-sub">業務文書への応用</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-box">
+          <div class="step-box-num">第3回</div>
+          <div class="step-box-title">「型」を組織に広げる</div>
+          <div class="step-box-sub">定着フェーズ（今日）</div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>2 / 17</span></div>
+    </div>
+
+    <!-- 3: 今日のゴール3つ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日のゴール3つ</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">①</span><span class="card-body">AI活用の3大リスクを説明できる</span></div>
+        <div class="card-item"><span class="card-num">②</span><span class="card-body">自部署のAI活用ガイドライン案を作成できる</span></div>
+        <div class="card-item"><span class="card-num">③</span><span class="card-body">来週から実践するAI活用計画を完成させる</span></div>
+      </div>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>3 / 17</span></div>
+    </div>
+
+    <!-- 4: WORK 今日の目標確認 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 3分　個人ワーク</div>
+      <div class="slide-title">今日の目標確認</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>研修ガイドの目標確認欄を開く</span></li>
+        <li class="step"><span class="step-num">2</span><span>今日特に持ち帰りたいものを1つ書く</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「ガイドライン・活用計画のどちらを重点にするか」決められているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>4 / 17</span></div>
+    </div>
+
+    <!-- 5: AI活用の3大リスク -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">AI活用の3大リスク</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>「禁止ありき」ではなく「安全に活用するためのガイドライン」を作ることが目的</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">①著作権：</span>AI出力が既存著作物に類似するリスク</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">②機密情報：</span>入力データの外部流出リスク</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">③ハルシネーション：</span>もっともらしい嘘の生成</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション2｜3大リスクとルール策定</span><span>5 / 17</span></div>
+    </div>
+
+    <!-- 6: リスク1 著作権 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">リスク1　著作権と対策</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>文化庁「AIと著作権に関する考え方について」（2024年）が企業向けに整理</span></li>
+        <li class="bullet"><span class="dot"></span><span>「開発・学習段階」と「生成・利用段階」を分けて考える——企業は後者が対象</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">対策：</span>AI出力は「下書き」扱い → 人間が編集・確認してから使用する</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション2｜3大リスクとルール策定</span><span>6 / 17</span></div>
+    </div>
+
+    <!-- 7: リスク2 機密情報 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">リスク2　機密情報と対策</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>情報漏洩・セキュリティリスクへの懸念が企業の最大課題（NRIセキュア：32.5%）</span></li>
+        <li class="bullet"><span class="dot"></span><span>通常版ChatGPTでは入力データがサービス改善に使われる可能性がある</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">対策：</span>顧客名・売上数字 → 仮名・ダミー値に置換。「入力前に1秒立ち止まる」習慣</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション2｜3大リスクとルール策定</span><span>7 / 17</span></div>
+    </div>
+
+    <!-- 8: リスク3 ハルシネーション -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">リスク3　ハルシネーションと対策</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>AIは「確率的に自然な次の言葉を生成する」——事実検証の仕組みが内部にない</span></li>
+        <li class="bullet"><span class="dot"></span><span>実例：米国弁護士が架空判例を裁判所に提出し制裁（AIが自信満々に作り上げた）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">対策：</span>数字・固有名詞・法令名は必ず一次情報でダブルチェック</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション2｜3大リスクとルール策定</span><span>8 / 17</span></div>
+    </div>
+
+    <!-- 9: ガイドライン策定の考え方 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">ガイドライン策定の考え方</div>
+      <div class="guide-grid">
+        <div class="guide-item guide-ok"><div class="guide-label">利用 OK</div><div class="guide-desc">積極的に使ってよい場面</div></div>
+        <div class="guide-item guide-ng"><div class="guide-label">利用 NG</div><div class="guide-desc">絶対に使ってはいけない場面</div></div>
+        <div class="guide-item guide-chk"><div class="guide-label">要確認</div><div class="guide-desc">上司に相談してから判断する場面</div></div>
+      </div>
+      <ul class="bullets" style="flex: 0;">
+        <li class="bullet"><span class="dot"></span><span>「迷ったら要確認」——立ち止まって確認する文化が組織定着の鍵</span></li>
+        <li class="bullet"><span class="dot"></span><span>参考：経産省「AI事業者ガイドライン第1.0版」（2024年4月）</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション2｜3大リスクとルール策定</span><span>9 / 17</span></div>
+    </div>
+
+    <!-- 10: WORK1 ガイドライン策定 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 15分　グループワーク（3〜4名）</div>
+      <div class="slide-title">ワーク1　AI活用ガイドライン策定</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>自部署を想定し、利用OK・NG・要確認の3分類で項目を出し合う</span></li>
+        <li class="step"><span class="step-num">2</span><span>各分類に最低2項目ずつ記入する（まず「絶対NG」を1つずつ出し合うと議論が動く）</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「迷ったら要確認」のルールで分類できているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション2｜3大リスクとルール策定</span><span>10 / 17</span></div>
+    </div>
+
+    <!-- 11: 業務フロー改善の3軸 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">業務フロー改善の3軸</div>
+      <div class="axis-grid">
+        <div class="axis-item">
+          <div class="axis-label">どの業務に</div>
+          <div class="axis-text">繰り返しが多い業務から始める——目安「30分以上かかる文書作成」</div>
+        </div>
+        <div class="axis-item">
+          <div class="axis-label">どの段階で</div>
+          <div class="axis-text">ゼロから作るより、たたき台の作成やチェックに使う</div>
+        </div>
+        <div class="axis-item">
+          <div class="axis-label">どう使うか</div>
+          <div class="axis-text">プロンプトのテンプレートを用意しておく——次からコピペで使える</div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>セクション3｜業務フロー改善</span><span>11 / 17</span></div>
+    </div>
+
+    <!-- 12: 業務改善の実績事例 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">業務改善の実績事例</div>
+      <div class="case-list">
+        <div class="case-item"><span class="case-org">みずほFG</span><span class="case-result">資料作成1〜2時間 → 約10分</span></div>
+        <div class="case-item"><span class="case-org">都城市</span><span class="case-result">年間約1,800時間の削減効果見込み</span></div>
+        <div class="case-item"><span class="case-org">別府市</span><span class="case-result">2週間かかる作業を2日程度に短縮</span></div>
+      </div>
+      <ul class="bullets" style="flex: 0; margin-top: 2%;">
+        <li class="bullet"><span class="dot"></span><span>「大きな成果も、最初は1つの業務から始まった」</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション3｜業務フロー改善</span><span>12 / 17</span></div>
+    </div>
+
+    <!-- 13: WORK2 AI活用計画作成 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 10分　個人ワーク</div>
+      <div class="slide-title">ワーク2　AI活用計画作成</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>来週の業務で「これにAIを使ってみよう」というものを1つ選ぶ</span></li>
+        <li class="step"><span class="step-num">2</span><span>業務名・現在の所要時間・AIの使い方・期待効果・実践日を記入する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「来週、実際にやれること」まで具体化できているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション3｜業務フロー改善</span><span>13 / 17</span></div>
+    </div>
+
+    <!-- 14: 全3回の学びの総括 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">全3回の学びの総括</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>第1回「型を知る」→ 第2回「型を使う」→ 第3回「型を組織に広げる」</span></li>
+        <li class="bullet"><span class="dot"></span><span>共通するのは「小さく始めて効果を実感する」アプローチ</span></li>
+        <li class="bullet"><span class="dot"></span><span>削減時間を測る企業は32.8%（JUAS 2025）——まず自分から計測を始める</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>14 / 17</span></div>
+    </div>
+
+    <!-- 15: 明日からの実践 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">明日からの実践</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>「研修で終わりにしない」——活用計画の1つを来週必ず試す</span></li>
+        <li class="bullet"><span class="dot"></span><span>セキュリティは「1回注意して終わり」ではなく習慣化する</span></li>
+        <li class="bullet"><span class="dot"></span><span>ガイドラインは部署で共有し、年1回見直す（法令・ガイドラインも随時更新）</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>15 / 17</span></div>
+    </div>
+
+    <!-- 16: WORK 活用計画のペア共有 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 12分　ペアワーク</div>
+      <div class="slide-title">活用計画のペア共有</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>ワーク2の活用計画をペアで発表し合う</span></li>
+        <li class="step"><span class="step-num">2</span><span>「いいね」と思った点と改善提案を1つ伝え合う</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：フィードバックをもとに計画を1〜2行ブラッシュアップできているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>16 / 17</span></div>
+    </div>
+
+    <!-- 17: WORK 振り返り記入 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 5分　個人ワーク</div>
+      <div class="slide-title">振り返り記入</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>全3回で学んだことを3つ書く</span></li>
+        <li class="step"><span class="step-num">2</span><span>今後に活かしたいことを1つ書く</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「来週実践する1つ」が具体的に書けているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>17 / 17</span></div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn" id="prev">&#8592;</button>
+  <span class="nav-counter" id="counter">1 / 17</span>
+  <button class="nav-btn" id="next">&#8594;</button>
+</nav>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+const total = slides.length;
+let current = 0;
+function show(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${total}`;
+  progress.style.width = `${((current + 1) / total) * 100}%`;
+}
+document.getElementById('prev').addEventListener('click', () => show(current - 1));
+document.getElementById('next').addEventListener('click', () => show(current + 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+});
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+});
+show(0);
+</script>
+</body>
+</html>

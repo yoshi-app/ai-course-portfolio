@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第2回：業務文書作成への応用 | 生成AI導入研修</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1B2A4A;
+  --teal: #2EC4B6;
+  --gray-bg: #F0F2F5;
+  --work-bg: #E6F8F7;
+}
+
+html, body {
+  background: #111827;
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', 'Meiryo', sans-serif;
+}
+body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 16px; gap: 10px;
+}
+.stage { width: 100%; max-width: 1024px; }
+.progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; margin-bottom: 10px; }
+.progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.3s ease; }
+
+.slide-wrap {
+  position: relative; width: 100%; padding-bottom: 56.25%;
+  overflow: hidden; border-radius: 6px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.slide { position: absolute; inset: 0; display: none; flex-direction: column; }
+.slide.active { display: flex; }
+
+.grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(46,196,182,0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46,196,182,0.1) 1px, transparent 1px);
+  background-size: 4% 7.1%;
+  pointer-events: none; z-index: 0;
+}
+
+/* 表紙 */
+.slide-cover { background: var(--navy); align-items: center; justify-content: center; text-align: center; padding: 6% 10%; }
+.cover-badge { font-size: clamp(11px, 1.3vw, 14px); color: var(--teal); letter-spacing: 0.1em; font-weight: 600; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.35; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-divider { width: 5vw; height: 3px; background: var(--teal); margin: 0 auto 3%; position: relative; z-index: 1; }
+.cover-sub { font-size: clamp(16px, 2vw, 22px); color: var(--teal); margin-bottom: 4%; position: relative; z-index: 1; }
+.cover-meta { font-size: clamp(13px, 1.5vw, 17px); color: rgba(255,255,255,0.6); line-height: 1.8; position: relative; z-index: 1; }
+
+/* 通常スライド */
+.slide-content { background: var(--gray-bg); padding: 5% 6% 9%; }
+.slide-title {
+  border-left: 0.55vw solid var(--teal); padding-left: 1.5%;
+  font-size: clamp(18px, 2.7vw, 30px); font-weight: 700; color: var(--navy);
+  margin-bottom: 4%; line-height: 1.3; width: 100%; position: relative; z-index: 1;
+}
+.bullets { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.bullet { display: flex; gap: 1.2%; font-size: clamp(14px, 2.1vw, 22px); line-height: 1.6; color: var(--navy); align-items: flex-start; width: 100%; }
+.dot { flex-shrink: 0; width: clamp(7px, 0.8vw, 9px); height: clamp(7px, 0.8vw, 9px); border-radius: 50%; background: var(--teal); margin-top: 0.75vw; }
+.bstrong { font-weight: 700; }
+
+/* 4要素グリッド */
+.four-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.four-item { background: #fff; border-radius: 0.5vw; padding: 2.5% 3%; border-top: 0.4vw solid var(--teal); display: flex; flex-direction: column; gap: 6%; }
+.four-label { font-size: clamp(12px, 1.5vw, 17px); font-weight: 800; color: var(--teal); }
+.four-text { font-size: clamp(12px, 1.65vw, 18px); color: var(--navy); line-height: 1.55; }
+
+/* 設計図スライド */
+.design-grid { display: flex; flex-direction: column; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.design-item { display: flex; gap: 2%; align-items: flex-start; background: #fff; border-radius: 0.5vw; padding: 1.8% 2.5%; flex: 1; }
+.design-key { flex-shrink: 0; min-width: 13%; font-size: clamp(12px, 1.5vw, 17px); font-weight: 800; color: var(--teal); }
+.design-val { font-size: clamp(13px, 1.8vw, 20px); color: var(--navy); line-height: 1.5; }
+
+/* 3検証ポイント */
+.check-grid { display: flex; flex-direction: column; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.check-item { display: flex; gap: 1.5%; align-items: flex-start; padding: 1.8% 2%; border-radius: 0.5vw; border-left: 0.4vw solid var(--teal); background: #fff; flex: 1; }
+.check-num { flex-shrink: 0; background: var(--teal); color: #fff; width: clamp(20px, 2.4vw, 28px); height: clamp(20px, 2.4vw, 28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 1.2vw, 14px); font-weight: 700; }
+.check-body { font-size: clamp(13px, 1.8vw, 20px); color: var(--navy); line-height: 1.5; }
+.check-body strong { font-weight: 700; }
+
+/* 4文書テーブル */
+.doc-table { flex: 1; width: 100%; display: flex; flex-direction: column; gap: 2%; position: relative; z-index: 1; }
+.doc-row { display: flex; gap: 2%; align-items: center; background: #fff; border-radius: 0.5vw; padding: 1.8% 2.5%; flex: 1; }
+.doc-type { flex-shrink: 0; min-width: 14%; font-size: clamp(13px, 1.7vw, 19px); font-weight: 800; color: var(--navy); }
+.doc-desc { font-size: clamp(13px, 1.8vw, 20px); color: #444; border-left: 0.3vw solid var(--teal); padding-left: 2%; }
+
+/* ワークスライド */
+.slide-work { background: var(--work-bg); padding: 5% 6% 4%; }
+.work-badge { position: absolute; top: 4.5%; right: 4%; background: var(--teal); color: #fff; padding: 0.8% 2%; border-radius: 2vw; font-size: clamp(11px, 1.35vw, 15px); font-weight: 700; z-index: 2; }
+.steps { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; margin-bottom: 3%; }
+.step { display: flex; gap: 1.5%; align-items: flex-start; font-size: clamp(14px, 2.1vw, 22px); line-height: 1.6; color: var(--navy); width: 100%; }
+.step-num { flex-shrink: 0; background: var(--navy); color: #fff; width: clamp(20px, 2.4vw, 28px); height: clamp(20px, 2.4vw, 28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 1.2vw, 14px); font-weight: 700; margin-top: 0.15vw; }
+.check-row { display: flex; gap: 1%; align-items: flex-start; background: rgba(27,42,74,0.08); padding: 1.5% 2%; border-radius: 0.4vw; width: 100%; position: relative; z-index: 1; }
+.check-icon { flex-shrink: 0; font-size: clamp(13px, 1.6vw, 18px); }
+.check-text { font-size: clamp(13px, 1.7vw, 19px); color: var(--navy); font-weight: 600; line-height: 1.55; }
+
+.slide-footer { position: absolute; bottom: 2%; left: 6%; right: 6%; font-size: clamp(9px, 1vw, 11px); color: rgba(27,42,74,0.35); display: flex; justify-content: space-between; z-index: 1; }
+
+.nav { display: flex; align-items: center; gap: 14px; }
+.nav-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.nav-btn:hover { background: rgba(255,255,255,0.22); }
+.nav-counter { color: rgba(255,255,255,0.7); font-size: 13px; min-width: 60px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="slide-wrap">
+
+    <!-- 1: 表紙 -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">生成AI導入研修 〜 ChatGPTを業務に活かす</div>
+      <div class="cover-title">第2回：業務文書作成への応用</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">～「型」で業務文書を量産する～</div>
+      <div class="cover-meta">対象：企業の一般社員（営業・事務・企画職）　／　90分</div>
+    </div>
+
+    <!-- 2: 本日のシフト -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">本日のシフト「知る」から「使う」へ</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">第1回：</span>「型」を知る（体験フェーズ）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">第2回：</span>「型」を使う（実践・型化フェーズ）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">本日のゴール：</span>メール・議事録・企画書を「型」で実際に作る</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>2 / 17</span></div>
+    </div>
+
+    <!-- 3: 70点ドラフト -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">コアコンセプト「70点ドラフト」の法則</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>AIに「100点の完成品」を求めず、70点のたたき台を作らせる</span></li>
+        <li class="bullet"><span class="dot"></span><span>人間が社内文化・関係性・専門用語を加味して100点に磨き上げる</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">実績：</span>みずほFG 資料作成約10分、SMBC 月数千時間の削減</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>3 / 17</span></div>
+    </div>
+
+    <!-- 4: WORK 目標確認 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 3分　個人ワーク</div>
+      <div class="slide-title">目標確認</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>研修ガイドの目標確認欄を開く</span></li>
+        <li class="step"><span class="step-num">2</span><span>今日特に上達したい業務文書を1つ書く</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「何の文書を・誰向けに」まで書けているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション1｜導入</span><span>4 / 17</span></div>
+    </div>
+
+    <!-- 5: 4要素 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">プロンプトの汎用エンジン（4要素）</div>
+      <div class="four-grid">
+        <div class="four-item">
+          <div class="four-label">役割（Role）</div>
+          <div class="four-text">差出人・立場を指定<br>→ 文体・トーンが変わる</div>
+        </div>
+        <div class="four-item">
+          <div class="four-label">文脈（Context）</div>
+          <div class="four-text">相手・目的・状況を伝える<br>→ AIが状況を理解して答える</div>
+        </div>
+        <div class="four-item">
+          <div class="four-label">指示（Instruction）</div>
+          <div class="four-text">何をどうするか＋条件を明示<br>→「動詞＋条件」がセット</div>
+        </div>
+        <div class="four-item">
+          <div class="four-label">出力形式（Output Format）</div>
+          <div class="four-text">形式・分量・構成を指定<br>→ 業務文書ごとに力点が変わる</div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>セクション2｜メール・議事録の実践</span><span>5 / 17</span></div>
+    </div>
+
+    <!-- 6: 設計図1 メール -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">設計図1　メール作成</div>
+      <div class="design-grid">
+        <div class="design-item"><span class="design-key">役割</span><span class="design-val">差出人の立場——「営業部の主任」と指定するだけで文体が変わる</span></div>
+        <div class="design-item"><span class="design-key">文脈</span><span class="design-val">相手との関係と目的——初対面か長年の取引先かでトーンが変わる</span></div>
+        <div class="design-item"><span class="design-key">指示</span><span class="design-val">トーンと長さを明示——「丁寧かつ簡潔に、3段落以内」</span></div>
+        <div class="design-item"><span class="design-key">出力形式</span><span class="design-val">「件名＋本文」を指定——そのままコピーできる形で受け取る</span></div>
+      </div>
+      <div class="slide-footer"><span>セクション2｜メール・議事録の実践</span><span>6 / 17</span></div>
+    </div>
+
+    <!-- 7: 設計図2 議事録 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">設計図2　議事録の要約</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">力点は「出力形式」：</span>整理軸を指定しないと時系列の羅列になる</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">整理軸の指定：</span>「決定事項・TODO（担当者・期限付き）・次回議題」の3項目</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">Few-shotの活用：</span>過去の議事録1件を例示 → 社内独自フォーマットに一発で合わせる</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション2｜メール・議事録の実践</span><span>7 / 17</span></div>
+    </div>
+
+    <!-- 8: 3つの検証ポイント -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">人間の仕事「3つの検証ポイント」</div>
+      <div class="check-grid">
+        <div class="check-item"><span class="check-num">①</span><span class="check-body"><strong>事実の正確性：</strong>数字・日付・固有名詞のハルシネーションがないか確認</span></div>
+        <div class="check-item"><span class="check-num">②</span><span class="check-body"><strong>トーンの適切さ：</strong>指定した役割・文脈が実際の相手関係に合っているか調整</span></div>
+        <div class="check-item"><span class="check-num">③</span><span class="check-body"><strong>社内用語との整合性：</strong>企業独自の言い回し・略語を人間が補正する</span></div>
+      </div>
+      <div class="slide-footer"><span>セクション2｜メール・議事録の実践</span><span>8 / 17</span></div>
+    </div>
+
+    <!-- 9: WORK1 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 17分　個人ワーク</div>
+      <div class="slide-title">ワーク1　業務文書プロンプト実践</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>2つの課題（①提案メール／②会議議事録）から1つ選ぶ</span></li>
+        <li class="step"><span class="step-num">2</span><span>4要素＋Few-shotでプロンプトを作成し、ChatGPTで実行する</span></li>
+        <li class="step"><span class="step-num">3</span><span>検証3ポイント（事実・トーン・社内用語）でチェック・修正する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「プロンプトの型＋検証3ポイント」がセットでできているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション2｜メール・議事録の実践</span><span>9 / 17</span></div>
+    </div>
+
+    <!-- 10: スケールアップ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">スケールアップ：複雑な文書へのアプローチ</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">短文（メール・議事録）：</span>一括生成</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">長文（企画書）：</span>構成設計＋段階的生成</span></li>
+        <li class="bullet"><span class="dot"></span><span>AIに「何を書くか」のガイド（構成）を与えないと論理が破綻し肝心な要素が抜ける</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション3｜企画書と応用テクニック</span><span>10 / 17</span></div>
+    </div>
+
+    <!-- 11: 設計図3 企画書 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">設計図3　企画書のドラフト</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">構成を先に人間が設計する：</span>背景 → 課題 → 提案 → 効果 → スケジュール</span></li>
+        <li class="bullet"><span class="dot"></span><span>構成指定をプロンプトの「指示」に組み込む → AIの散漫な出力を防ぐ</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">Before/After：</span>「白紙から半日」→「構成指定で1時間に骨格完成」</span></li>
+        <li class="bullet"><span class="dot"></span><span>人間の役割：AIが出力した数値・効果推定は推測値 → 必ず事実確認</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション3｜企画書と応用テクニック</span><span>11 / 17</span></div>
+    </div>
+
+    <!-- 12: 設計図4 比較表 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">設計図4　比較表の作成</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">比較軸を人間が先に設計：</span>「何と何を・どの観点で比べるか」を3〜5軸決める</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">出力形式：</span>「Markdown表形式」と明確に指定 → 整理された表を一発出力</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">情報の鮮度確認：</span>料金・スペックは古い可能性 → 公式サイトで裏付け必須</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション3｜企画書と応用テクニック</span><span>12 / 17</span></div>
+    </div>
+
+    <!-- 13: セキュリティ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">セキュリティ注意点</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>企画書には機密情報（未発表事業戦略・顧客名・売上数字）が含まれやすい</span></li>
+        <li class="bullet"><span class="dot"></span><span>情報漏洩・セキュリティリスクへの懸念が企業の最大課題（NRIセキュア：32.5%）</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">対策：</span>社名・人名・数字をダミー値（A社・担当者X・○億円規模）に置き換えてから入力</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション3｜企画書と応用テクニック</span><span>13 / 17</span></div>
+    </div>
+
+    <!-- 14: WORK2 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 17分　個人ワーク</div>
+      <div class="slide-title">ワーク2　企画書または比較表の作成</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>2つの課題（①企画書ドラフト／②比較表）から1つ選ぶ</span></li>
+        <li class="step"><span class="step-num">2</span><span>構成（企画書）または比較軸（比較表）を先に決める</span></li>
+        <li class="step"><span class="step-num">3</span><span>ChatGPTで実行し、論理構成・内容を検証・修正する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「構成を先に指定してから書かせる」流れができているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション3｜企画書と応用テクニック</span><span>14 / 17</span></div>
+    </div>
+
+    <!-- 15: 今日の3ポイント -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日の3ポイント</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>①業務文書ごとに最適なプロンプトの型がある</span></li>
+        <li class="bullet"><span class="dot"></span><span>②出力は70点ドラフト——検証3ポイントで必ずチェック</span></li>
+        <li class="bullet"><span class="dot"></span><span>③企画書・比較表など構造的な文書は構成を先に指定すると品質が上がる</span></li>
+      </ul>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>15 / 17</span></div>
+    </div>
+
+    <!-- 16: 4文書の型 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">4文書の型の違い</div>
+      <div class="doc-table">
+        <div class="doc-row"><span class="doc-type">メール</span><span class="doc-desc">役割・文脈で文体を制御</span></div>
+        <div class="doc-row"><span class="doc-type">議事録</span><span class="doc-desc">出力形式で整理の構造を制御</span></div>
+        <div class="doc-row"><span class="doc-type">企画書</span><span class="doc-desc">構成指定で論理の流れを制御</span></div>
+        <div class="doc-row"><span class="doc-type">比較表</span><span class="doc-desc">比較軸と表形式の指定で情報の整理を制御</span></div>
+      </div>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>16 / 17</span></div>
+    </div>
+
+    <!-- 17: WORK 振り返り -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 4分　個人ワーク</div>
+      <div class="slide-title">振り返り記入</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>振り返り欄に今日のポイントを3つ書く</span></li>
+        <li class="step"><span class="step-num">2</span><span>明日の業務で実際に使うプロンプトを1つ具体的に書く</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「何の文書を、誰向けに、どんな構成で」まで書けているか</span>
+      </div>
+      <div class="slide-footer"><span>セクション4｜まとめ</span><span>17 / 17</span></div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn" id="prev">&#8592;</button>
+  <span class="nav-counter" id="counter">1 / 17</span>
+  <button class="nav-btn" id="next">&#8594;</button>
+</nav>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+const total = slides.length;
+let current = 0;
+function show(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${total}`;
+  progress.style.width = `${((current + 1) / total) * 100}%`;
+}
+document.getElementById('prev').addEventListener('click', () => show(current - 1));
+document.getElementById('next').addEventListener('click', () => show(current + 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+});
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+});
+show(0);
+</script>
+</body>
+</html>
