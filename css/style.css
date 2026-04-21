@@ -1155,6 +1155,25 @@ a {
   }
 }
 
+/* ========== DISCLAIMER ========== */
+.disclaimer {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-left: 4px solid #F59E0B;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 1.5rem 0 2rem;
+  font-size: 0.82rem;
+  color: var(--gray-700);
+  line-height: 1.7;
+}
+
+.disclaimer-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #92400E;
+}
+
 /* ========== CLAUDE CODE 研修テーマ ========== */
 :root {
   --teal: #2EC4B6;
