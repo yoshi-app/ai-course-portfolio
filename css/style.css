@@ -418,8 +418,9 @@ a {
   color: var(--white);
 }
 
-.course-corporate .course-badge {
-  background: linear-gradient(135deg, var(--blue) 0%, #1d4ed8 100%);
+.course-corporate .course-badge,
+.course-claudecode .course-badge {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
 .course-kids .course-badge {
@@ -1182,10 +1183,6 @@ a {
   --teal-bg: #F0FDFA;
 }
 
-/* カードバッジ（企業研修向けは corporate と同色） */
-.course-claudecode .course-badge {
-  background: linear-gradient(135deg, var(--blue) 0%, #1d4ed8 100%);
-}
 
 /* サムネイルプレースホルダー */
 .course-thumbnail-claudecode {
