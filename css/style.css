@@ -858,7 +858,8 @@ a {
   margin-bottom: 20px;
 }
 
-.course-hero-corporate .course-hero-badge {
+.course-hero-corporate .course-hero-badge,
+.course-hero-claudecode .course-hero-badge {
   background: var(--blue);
 }
 
