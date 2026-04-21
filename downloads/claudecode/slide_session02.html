@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第2回：仕組みと便利機能を体験する | Claude Code 導入研修</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:   #1B2A4A;
+  --teal:   #2EC4B6;
+  --gray-bg: #F0F2F5;
+  --work-bg: #E6F8F7;
+}
+
+html, body {
+  background: #111827;
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', 'Meiryo', sans-serif;
+}
+body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 16px; gap: 10px;
+}
+
+.stage { width: 100%; max-width: 1024px; }
+
+.progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; margin-bottom: 10px; }
+.progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.3s ease; }
+
+.slide-wrap {
+  position: relative; width: 100%; padding-bottom: 56.25%;
+  overflow: hidden; border-radius: 6px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.slide { position: absolute; inset: 0; display: none; flex-direction: column; }
+.slide.active { display: flex; }
+
+.grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(46,196,182,0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46,196,182,0.1) 1px, transparent 1px);
+  background-size: 4% 7.1%;
+  pointer-events: none; z-index: 0;
+}
+
+.slide-cover {
+  background: var(--navy);
+  align-items: center; justify-content: center; text-align: center;
+  padding: 6% 10%;
+}
+.cover-badge { font-size: clamp(11px,1.3vw,14px); color: var(--teal); letter-spacing: 0.1em; font-weight: 600; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-title { font-size: clamp(28px,4vw,44px); font-weight: 800; color: #fff; line-height: 1.35; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-divider { width: 5vw; height: 3px; background: var(--teal); margin: 0 auto 3%; position: relative; z-index: 1; }
+.cover-sub  { font-size: clamp(16px,2vw,22px); color: var(--teal); margin-bottom: 4%; position: relative; z-index: 1; }
+.cover-meta { font-size: clamp(13px,1.5vw,17px); color: rgba(255,255,255,0.6); line-height: 1.8; position: relative; z-index: 1; }
+
+.slide-content { background: var(--gray-bg); padding: 5% 6% 9%; }
+
+.slide-title {
+  border-left: 0.55vw solid var(--teal); padding-left: 1.5%;
+  font-size: clamp(18px,2.7vw,30px); font-weight: 700; color: var(--navy);
+  margin-bottom: 4%; line-height: 1.3; width: 100%; position: relative; z-index: 1;
+}
+
+.bullets { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.bullet  { display: flex; gap: 1.2%; font-size: clamp(14px,2.1vw,22px); line-height: 1.6; color: var(--navy); align-items: flex-start; width: 100%; }
+.dot     { flex-shrink: 0; width: clamp(7px,0.8vw,9px); height: clamp(7px,0.8vw,9px); border-radius: 50%; background: var(--teal); margin-top: 0.75vw; }
+.bstrong { font-weight: 700; }
+
+.emph { background: var(--navy); color: #fff; padding: 1.5% 2%; border-radius: 0.4vw; font-size: clamp(13px,1.8vw,20px); font-weight: 600; width: 100%; position: relative; z-index: 1; margin-top: 2%; }
+
+.two-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.grid-item { background: #fff; border-radius: 0.5vw; padding: 2.5% 3%; border-top: 0.4vw solid var(--teal); display: flex; flex-direction: column; gap: 6%; }
+.grid-item-label { font-size: clamp(12px,1.5vw,17px); font-weight: 800; color: var(--teal); }
+.grid-item-text  { font-size: clamp(12px,1.65vw,18px); color: var(--navy); line-height: 1.55; }
+
+.card-list { display: flex; flex-direction: column; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.card-item { display: flex; gap: 1.5%; align-items: flex-start; background: #fff; border-radius: 0.5vw; padding: 1.8% 2%; border-left: 0.4vw solid var(--teal); flex: 1; }
+.card-num  { flex-shrink: 0; background: var(--navy); color: #fff; width: clamp(20px,2.4vw,28px); height: clamp(20px,2.4vw,28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px,1.2vw,14px); font-weight: 700; }
+.card-body { font-size: clamp(13px,1.8vw,20px); color: var(--navy); line-height: 1.5; }
+
+.row-table { flex: 1; width: 100%; display: flex; flex-direction: column; gap: 2%; position: relative; z-index: 1; }
+.row-item  { display: flex; gap: 2%; align-items: center; background: #fff; border-radius: 0.5vw; padding: 1.8% 2.5%; flex: 1; }
+.row-key   { flex-shrink: 0; min-width: 14%; font-size: clamp(13px,1.7vw,19px); font-weight: 800; color: var(--navy); }
+.row-val   { font-size: clamp(13px,1.8vw,20px); color: #444; border-left: 0.3vw solid var(--teal); padding-left: 2%; }
+
+.slide-footer { position: absolute; bottom: 2%; left: 6%; right: 6%; font-size: clamp(9px,1vw,11px); color: rgba(27,42,74,0.35); display: flex; justify-content: space-between; z-index: 1; }
+
+.slide-work { background: var(--work-bg); padding: 5% 6% 4%; }
+
+.work-badge { position: absolute; top: 4.5%; right: 4%; background: var(--teal); color: #fff; padding: 0.8% 2%; border-radius: 2vw; font-size: clamp(11px,1.35vw,15px); font-weight: 700; z-index: 2; }
+
+.steps    { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; margin-bottom: 3%; }
+.step     { display: flex; gap: 1.5%; align-items: flex-start; font-size: clamp(14px,2.1vw,22px); line-height: 1.6; color: var(--navy); width: 100%; }
+.step-num { flex-shrink: 0; background: var(--navy); color: #fff; width: clamp(20px,2.4vw,28px); height: clamp(20px,2.4vw,28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px,1.2vw,14px); font-weight: 700; margin-top: 0.15vw; }
+
+.check-row  { display: flex; gap: 1%; align-items: flex-start; background: rgba(27,42,74,0.08); padding: 1.5% 2%; border-radius: 0.4vw; width: 100%; position: relative; z-index: 1; }
+.check-icon { flex-shrink: 0; font-size: clamp(13px,1.6vw,18px); }
+.check-text { font-size: clamp(13px,1.7vw,19px); color: var(--navy); font-weight: 600; line-height: 1.55; }
+
+.nav { display: flex; align-items: center; gap: 14px; }
+.nav-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.nav-btn:hover { background: rgba(255,255,255,0.22); }
+.nav-counter { color: rgba(255,255,255,0.7); font-size: 13px; min-width: 60px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="slide-wrap">
+
+    <!-- NOTE: 第2回 表紙 -->
+    <div class="slide slide-cover active">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">Claude Code 導入研修</div>
+      <div class="cover-title">第2回：仕組みと便利機能を体験する</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">Claude Code は何ができるのか</div>
+      <div class="cover-meta">対象：非エンジニアの一般職　／　90分</div>
+    </div>
+
+    <!-- NOTE: 今日の流れ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日の流れ</div>
+      <div class="row-table">
+        <div class="row-item"><span class="row-key">10分</span><span class="row-val">前回振り返り・今日のゴール確認</span></div>
+        <div class="row-item"><span class="row-key">25分</span><span class="row-val">Claude Code の仕組みを知る</span></div>
+        <div class="row-item"><span class="row-key">25分</span><span class="row-val">CLAUDE.md・スキル・音声入力を体験</span></div>
+        <div class="row-item"><span class="row-key">25分</span><span class="row-val">演習：会議メモ → ToDoリスト変換</span></div>
+        <div class="row-item"><span class="row-key">5分</span><span class="row-val">まとめ・宿題</span></div>
+      </div>
+      <div class="slide-footer"><span>アジェンダ</span><span>2 / 26</span></div>
+    </div>
+
+    <!-- NOTE: セクション1ヘッダー：導入・前回振り返り -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 1</div>
+      <div class="cover-title">導入・前回振り返り</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">宿題体験を共有し、今日の見通しを持つ</div>
+    </div>
+
+    <!-- NOTE: 前回確認と今日のゴール -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">前回の確認と今日のゴール</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">第1回でやったこと：</span>安全ルール3つ・インストール・起動</span></li>
+        <li class="bullet"><span class="dot"></span><span>起動がまだの場合：<code style="background:#e8eef8;padding:1px 5px;border-radius:3px;font-size:0.88em;">claude doctor</code> で環境診断</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">今日の4テーマ：</span>①動作原理 ②CLAUDE.md ③スキル・音声入力 ④演習</span></li>
+      </ul>
+      <div class="slide-footer"><span>導入</span><span>4 / 26</span></div>
+    </div>
+
+    <!-- NOTE: 今日のキーワード -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日のキーワード</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">1</span><span class="card-body">カレントディレクトリ</span></div>
+        <div class="card-item"><span class="card-num">2</span><span class="card-body">CLAUDE.md（絶対遵守ではない）</span></div>
+        <div class="card-item"><span class="card-num">3</span><span class="card-body">スキル（/コマンド）</span></div>
+        <div class="card-item"><span class="card-num">4</span><span class="card-body">指示文の4要素</span></div>
+      </div>
+      <div class="slide-footer"><span>導入</span><span>5 / 26</span></div>
+    </div>
+
+    <!-- NOTE: セクション2ヘッダー：Claude Code の仕組み -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 2</div>
+      <div class="cover-title">Claude Code の仕組みを知る</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">何ができて、何ができないのかを理解する</div>
+    </div>
+
+    <!-- NOTE: カレントディレクトリの概念 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">カレントディレクトリ＝作業範囲</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>「今いるフォルダ」が Claude Code の作業範囲</span></li>
+        <li class="bullet"><span class="dot"></span><span>フォルダの外のファイルには触れない（安全設計）</span></li>
+        <li class="bullet"><span class="dot"></span><span>安全ルール③（専用フォルダを使う）と直結している</span></li>
+      </ul>
+      <div class="emph">claude_work で起動すれば、その中だけで作業する</div>
+      <div class="slide-footer"><span>仕組みを知る</span><span>7 / 26</span></div>
+    </div>
+
+    <!-- NOTE: できること vs できないこと -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">できること　vs　できないこと</div>
+      <div class="two-grid">
+        <div class="grid-item">
+          <div class="grid-item-label">✅ できること</div>
+          <div class="grid-item-text">ファイルの読み込み・整理・変換<br>文書の下書き作成<br>繰り返し作業の自動化</div>
+        </div>
+        <div class="grid-item">
+          <div class="grid-item-label">❌ できないこと</div>
+          <div class="grid-item-text">インターネットのリアルタイム情報<br>社内システムへのアクセス<br>最終的な判断・意思決定</div>
+        </div>
+      </div>
+      <div class="emph">イメージ：「フォルダの中で作業する代行者」</div>
+      <div class="slide-footer"><span>仕組みを知る</span><span>8 / 26</span></div>
+    </div>
+
+    <!-- NOTE: 理解確認クイズ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">理解確認クイズ</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>「来週の会議の議題を Claude に調べさせる」——できる？できない？</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">正解：できない</span>（リアルタイム情報へのアクセス不可）</span></li>
+        <li class="bullet"><span class="dot"></span><span>「会議の議事録をまとめて ToDo リストにする」——できる？できない？</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">正解：できる</span>（フォルダ内のファイルを読んで処理）</span></li>
+      </ul>
+      <div class="slide-footer"><span>仕組みを知る</span><span>9 / 26</span></div>
+    </div>
+
+    <!-- NOTE: セクション3ヘッダー：CLAUDE.md -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 3</div>
+      <div class="cover-title">CLAUDE.md を書いて試す</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">「事前指示書」を自分で作成する</div>
+    </div>
+
+    <!-- NOTE: CLAUDE.mdとは -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">CLAUDE.md とは</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>起動のたびに読み込まれる「事前指示書」</span></li>
+        <li class="bullet"><span class="dot"></span><span>毎回言いたいことをここに書いておく</span></li>
+        <li class="bullet"><span class="dot"></span><span>ChatGPT のシステムプロンプトに似ているが強制力がない</span></li>
+      </ul>
+      <div class="slide-footer"><span>CLAUDE.md</span><span>11 / 26</span></div>
+    </div>
+
+    <!-- NOTE: 絶対遵守ではない特性 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">重要：絶対遵守ではない</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>CLAUDE.md はガイドライン、命令ではない</span></li>
+        <li class="bullet"><span class="dot"></span><span>AI が状況を判断して従わないことがある</span></li>
+        <li class="bullet"><span class="dot"></span><span>正しい使い方：CLAUDE.md ＋ 毎回の指示文で念押しの「2段構え」</span></li>
+      </ul>
+      <div class="emph">CLAUDE.md は補助。毎回の指示文が最優先</div>
+      <div class="slide-footer"><span>CLAUDE.md</span><span>12 / 26</span></div>
+    </div>
+
+    <!-- NOTE: ワーク1 CLAUDE.md作成 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 13分　個人ハンズオン</div>
+      <div class="slide-title">ワーク1　CLAUDE.md 作成・動作確認</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>claude_work で <code style="background:rgba(27,42,74,0.1);padding:1px 5px;border-radius:3px;">claude</code> を起動し「CLAUDE.mdを作って2行書いて」と指示</span></li>
+        <li class="step"><span class="step-num">2</span><span>「日本語で答えて」と書いて → 日本語で返答が来るか確認</span></li>
+        <li class="step"><span class="step-num">3</span><span>「すぐに実行して」と書いて → 確認を取るか取らないかを観察</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「確認なしに動き出した」体験ができればOK（絶対遵守ではないの体感）</span>
+      </div>
+      <div class="slide-footer"><span>CLAUDE.md</span><span>13 / 26</span></div>
+    </div>
+
+    <!-- NOTE: セクション4ヘッダー：スキルと音声入力 -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 4</div>
+      <div class="cover-title">スキルと音声入力を体験する</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">便利機能でもっと効率よく使う</div>
+    </div>
+
+    <!-- NOTE: スキル（/コマンド）とは -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">スキル（/コマンド）とは</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>/ から始まるコマンドで、よく使う操作をワンコマンドで呼び出せる</span></li>
+        <li class="bullet"><span class="dot"></span><span>ショートカットキーのようなもの</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">既製スキル：</span>/help・/clear・/voice など</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">カスタムスキル：</span>自分で作成できる（第3回で紹介）</span></li>
+      </ul>
+      <div class="slide-footer"><span>スキル・音声入力</span><span>15 / 26</span></div>
+    </div>
+
+    <!-- NOTE: ワーク2 スキル呼び出し体験 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 5分　個人ハンズオン</div>
+      <div class="slide-title">ワーク2　スキル呼び出し体験</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span><code style="background:rgba(27,42,74,0.1);padding:1px 5px;border-radius:3px;">/help</code> を入力してコマンド一覧を確認する</span></li>
+        <li class="step"><span class="step-num">2</span><span>一覧から1つ選んで実行する（<code style="background:rgba(27,42,74,0.1);padding:1px 5px;border-radius:3px;">/clear</code> 推奨）</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：コマンドが動作したことを確認</span>
+      </div>
+      <div class="slide-footer"><span>スキル・音声入力</span><span>16 / 26</span></div>
+    </div>
+
+    <!-- NOTE: ワーク3 音声入力体験 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 5分　個人ハンズオン</div>
+      <div class="slide-title">ワーク3　音声入力体験（ベータ機能）</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span><code style="background:rgba(27,42,74,0.1);padding:1px 5px;border-radius:3px;">/voice</code> と入力して音声入力コマンドを起動する</span></li>
+        <li class="step"><span class="step-num">2</span><span>Space を押しながら「会議メモを整理してください」と話す</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：起動できない場合はキーボード入力で進める（ベータ機能のため正常）</span>
+      </div>
+      <div class="slide-footer"><span>スキル・音声入力</span><span>17 / 26</span></div>
+    </div>
+
+    <!-- NOTE: セクション5ヘッダー：演習 -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 5</div>
+      <div class="cover-title">演習：会議メモを ToDo リストに変換する</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">指示文の4要素で精度を上げる</div>
+    </div>
+
+    <!-- NOTE: 指示文の4要素 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">指示文の4要素</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">①</span><span class="card-body"><strong>環境：</strong>どのフォルダで作業するか</span></div>
+        <div class="card-item"><span class="card-num">②</span><span class="card-body"><strong>入力：</strong>何のファイルを渡すか</span></div>
+        <div class="card-item"><span class="card-num">③</span><span class="card-body"><strong>出力：</strong>何というファイルに保存するか</span></div>
+        <div class="card-item"><span class="card-num">④</span><span class="card-body"><strong>確認単位：</strong>どのタイミングで確認を取るか</span></div>
+      </div>
+      <div class="slide-footer"><span>演習</span><span>19 / 26</span></div>
+    </div>
+
+    <!-- NOTE: ワーク4 会議メモ→ToDo変換演習 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 20分　個人ハンズオン</div>
+      <div class="slide-title">ワーク4　会議メモ → ToDo 変換演習</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>事前配布の <code style="background:rgba(27,42,74,0.1);padding:1px 5px;border-radius:3px;">meeting_memo.txt</code> を claude_work にコピーする（元ファイルは変更しない）</span></li>
+        <li class="step"><span class="step-num">2</span><span>4要素を揃えた指示文を入力して実行する</span></li>
+        <li class="step"><span class="step-num">3</span><span><code style="background:rgba(27,42,74,0.1);padding:1px 5px;border-radius:3px;">todo_list.md</code> が claude_work 内に生成されたことを確認する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：担当者別の ToDo と期限が整理されていれば完了</span>
+      </div>
+      <div class="slide-footer"><span>演習</span><span>20 / 26</span></div>
+    </div>
+
+    <!-- NOTE: セクション6ヘッダー：まとめ・宿題 -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 6</div>
+      <div class="cover-title">まとめ・宿題</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">今日学んだことを整理して次回へ</div>
+    </div>
+
+    <!-- NOTE: 今日のポイント整理 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日のポイント整理</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">①</span><span class="card-body">カレントディレクトリ＝今いるフォルダが作業範囲</span></div>
+        <div class="card-item"><span class="card-num">②</span><span class="card-body">CLAUDE.md は絶対遵守ではない・毎回の指示文と組み合わせる</span></div>
+        <div class="card-item"><span class="card-num">③</span><span class="card-body">スキル（/コマンド）で繰り返し操作を効率化</span></div>
+        <div class="card-item"><span class="card-num">④</span><span class="card-body">指示文の4要素（環境・入力・出力・確認単位）で精度が上がる</span></div>
+      </div>
+      <div class="slide-footer"><span>まとめ</span><span>22 / 26</span></div>
+    </div>
+
+    <!-- NOTE: ワーク5 宿題シート -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 3分　個人ワーク</div>
+      <div class="slide-title">ワーク5　宿題シート記入</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>次回までに試すことを1つ決める（機密でないファイルを選ぶ）</span></li>
+        <li class="step"><span class="step-num">2</span><span>安全3ルール（機密NG・Approve確認・claude_work のみ）を確認する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「次回までに試すこと」と「試す理由」が書けているか</span>
+      </div>
+      <div class="slide-footer"><span>まとめ</span><span>23 / 26</span></div>
+    </div>
+
+    <!-- NOTE: 安全ルール再確認 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">宿題を試す前に — 安全3ルール再確認</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">①</span><span class="card-body">機密データ（顧客情報・個人情報・社外秘）は渡さない</span></div>
+        <div class="card-item"><span class="card-num">②</span><span class="card-body">Approve の内容を読んでから押す（迷ったら Reject）</span></div>
+        <div class="card-item"><span class="card-num">③</span><span class="card-body">claude_work フォルダの中だけで作業する</span></div>
+      </div>
+      <div class="slide-footer"><span>まとめ</span><span>24 / 26</span></div>
+    </div>
+
+    <!-- NOTE: 次回予告 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">次回予告 — 第3回</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">テーマ：</span>繰り返し作業を自動化する・継続活用プラン作成</span></li>
+        <li class="bullet"><span class="dot"></span><span>複数ファイルの一括処理（バッチ処理）を体験</span></li>
+        <li class="bullet"><span class="dot"></span><span>宿題で試した体験を持ち寄ってください（失敗談歓迎）</span></li>
+        <li class="bullet"><span class="dot"></span><span>今日のキーワードを帰り際に確認してください</span></li>
+      </ul>
+      <div class="slide-footer"><span>まとめ</span><span>25 / 26</span></div>
+    </div>
+
+    <!-- NOTE: 終わりのスライド -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">Claude Code 導入研修　第2回</div>
+      <div class="cover-title">お疲れさまでした</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">次回は繰り返し作業の自動化を体験します</div>
+      <div class="cover-meta">宿題：機密でないファイルで Claude Code を1回試してみる</div>
+    </div>
+
+  </div><!-- /slide-wrap -->
+</div><!-- /stage -->
+
+<nav class="nav">
+  <button class="nav-btn" id="prev">&#8592;</button>
+  <span class="nav-counter" id="counter">1 / 26</span>
+  <button class="nav-btn" id="next">&#8594;</button>
+</nav>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+const total = slides.length;
+let current = 0;
+
+function show(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${total}`;
+  progress.style.width = `${((current + 1) / total) * 100}%`;
+}
+
+document.getElementById('prev').addEventListener('click', () => show(current - 1));
+document.getElementById('next').addEventListener('click', () => show(current + 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+});
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+});
+
+show(0);
+</script>
+</body>
+</html>

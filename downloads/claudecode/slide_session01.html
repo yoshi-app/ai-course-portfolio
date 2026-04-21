@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第1回：知る・安全を確認する | Claude Code 導入研修</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:   #1B2A4A;
+  --teal:   #2EC4B6;
+  --gray-bg: #F0F2F5;
+  --work-bg: #E6F8F7;
+}
+
+html, body {
+  background: #111827;
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', 'Meiryo', sans-serif;
+}
+body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 16px; gap: 10px;
+}
+
+.stage { width: 100%; max-width: 1024px; }
+
+.progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; margin-bottom: 10px; }
+.progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.3s ease; }
+
+.slide-wrap {
+  position: relative; width: 100%; padding-bottom: 56.25%;
+  overflow: hidden; border-radius: 6px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.slide { position: absolute; inset: 0; display: none; flex-direction: column; }
+.slide.active { display: flex; }
+
+.grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(46,196,182,0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46,196,182,0.1) 1px, transparent 1px);
+  background-size: 4% 7.1%;
+  pointer-events: none; z-index: 0;
+}
+
+.slide-cover {
+  background: var(--navy);
+  align-items: center; justify-content: center; text-align: center;
+  padding: 6% 10%;
+}
+.cover-badge { font-size: clamp(11px,1.3vw,14px); color: var(--teal); letter-spacing: 0.1em; font-weight: 600; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-title { font-size: clamp(28px,4vw,44px); font-weight: 800; color: #fff; line-height: 1.35; margin-bottom: 3%; position: relative; z-index: 1; }
+.cover-divider { width: 5vw; height: 3px; background: var(--teal); margin: 0 auto 3%; position: relative; z-index: 1; }
+.cover-sub  { font-size: clamp(16px,2vw,22px); color: var(--teal); margin-bottom: 4%; position: relative; z-index: 1; }
+.cover-meta { font-size: clamp(13px,1.5vw,17px); color: rgba(255,255,255,0.6); line-height: 1.8; position: relative; z-index: 1; }
+
+.slide-content { background: var(--gray-bg); padding: 5% 6% 9%; }
+
+.slide-title {
+  border-left: 0.55vw solid var(--teal); padding-left: 1.5%;
+  font-size: clamp(18px,2.7vw,30px); font-weight: 700; color: var(--navy);
+  margin-bottom: 4%; line-height: 1.3; width: 100%; position: relative; z-index: 1;
+}
+
+.bullets { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.bullet  { display: flex; gap: 1.2%; font-size: clamp(14px,2.1vw,22px); line-height: 1.6; color: var(--navy); align-items: flex-start; width: 100%; }
+.dot     { flex-shrink: 0; width: clamp(7px,0.8vw,9px); height: clamp(7px,0.8vw,9px); border-radius: 50%; background: var(--teal); margin-top: 0.75vw; }
+.bstrong { font-weight: 700; }
+
+.emph { background: var(--navy); color: #fff; padding: 1.5% 2%; border-radius: 0.4vw; font-size: clamp(13px,1.8vw,20px); font-weight: 600; width: 100%; position: relative; z-index: 1; margin-top: 2%; }
+
+.two-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.grid-item { background: #fff; border-radius: 0.5vw; padding: 2.5% 3%; border-top: 0.4vw solid var(--teal); display: flex; flex-direction: column; gap: 6%; }
+.grid-item-label { font-size: clamp(12px,1.5vw,17px); font-weight: 800; color: var(--teal); }
+.grid-item-text  { font-size: clamp(12px,1.65vw,18px); color: var(--navy); line-height: 1.55; }
+
+.card-list { display: flex; flex-direction: column; gap: 2%; flex: 1; width: 100%; position: relative; z-index: 1; }
+.card-item { display: flex; gap: 1.5%; align-items: flex-start; background: #fff; border-radius: 0.5vw; padding: 1.8% 2%; border-left: 0.4vw solid var(--teal); flex: 1; }
+.card-num  { flex-shrink: 0; background: var(--navy); color: #fff; width: clamp(20px,2.4vw,28px); height: clamp(20px,2.4vw,28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px,1.2vw,14px); font-weight: 700; }
+.card-body { font-size: clamp(13px,1.8vw,20px); color: var(--navy); line-height: 1.5; }
+
+.row-table { flex: 1; width: 100%; display: flex; flex-direction: column; gap: 2%; position: relative; z-index: 1; }
+.row-item  { display: flex; gap: 2%; align-items: center; background: #fff; border-radius: 0.5vw; padding: 1.8% 2.5%; flex: 1; }
+.row-key   { flex-shrink: 0; min-width: 14%; font-size: clamp(13px,1.7vw,19px); font-weight: 800; color: var(--navy); }
+.row-val   { font-size: clamp(13px,1.8vw,20px); color: #444; border-left: 0.3vw solid var(--teal); padding-left: 2%; }
+
+.slide-footer { position: absolute; bottom: 2%; left: 6%; right: 6%; font-size: clamp(9px,1vw,11px); color: rgba(27,42,74,0.35); display: flex; justify-content: space-between; z-index: 1; }
+
+.slide-work { background: var(--work-bg); padding: 5% 6% 4%; }
+
+.work-badge { position: absolute; top: 4.5%; right: 4%; background: var(--teal); color: #fff; padding: 0.8% 2%; border-radius: 2vw; font-size: clamp(11px,1.35vw,15px); font-weight: 700; z-index: 2; }
+
+.steps    { list-style: none; display: flex; flex-direction: column; gap: 3%; flex: 1; width: 100%; position: relative; z-index: 1; margin-bottom: 3%; }
+.step     { display: flex; gap: 1.5%; align-items: flex-start; font-size: clamp(14px,2.1vw,22px); line-height: 1.6; color: var(--navy); width: 100%; }
+.step-num { flex-shrink: 0; background: var(--navy); color: #fff; width: clamp(20px,2.4vw,28px); height: clamp(20px,2.4vw,28px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px,1.2vw,14px); font-weight: 700; margin-top: 0.15vw; }
+
+.check-row  { display: flex; gap: 1%; align-items: flex-start; background: rgba(27,42,74,0.08); padding: 1.5% 2%; border-radius: 0.4vw; width: 100%; position: relative; z-index: 1; }
+.check-icon { flex-shrink: 0; font-size: clamp(13px,1.6vw,18px); }
+.check-text { font-size: clamp(13px,1.7vw,19px); color: var(--navy); font-weight: 600; line-height: 1.55; }
+
+.nav { display: flex; align-items: center; gap: 14px; }
+.nav-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.nav-btn:hover { background: rgba(255,255,255,0.22); }
+.nav-counter { color: rgba(255,255,255,0.7); font-size: 13px; min-width: 60px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="slide-wrap">
+
+    <!-- NOTE: 第1回 表紙 -->
+    <div class="slide slide-cover active">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">Claude Code 導入研修</div>
+      <div class="cover-title">第1回：知る・安全を確認する</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">使う前に押さえるべきこと</div>
+      <div class="cover-meta">対象：非エンジニアの一般職　／　90分</div>
+    </div>
+
+    <!-- NOTE: 今日の流れ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日の流れ</div>
+      <div class="row-table">
+        <div class="row-item"><span class="row-key">25分</span><span class="row-val">Why Now・Claude Code とは何か</span></div>
+        <div class="row-item"><span class="row-key">25分</span><span class="row-val">安全ルール体感（3つのルールを習得）</span></div>
+        <div class="row-item"><span class="row-key">30分</span><span class="row-val">セットアップ実践（インストール・起動）</span></div>
+        <div class="row-item"><span class="row-key">10分</span><span class="row-val">まとめ・宿題</span></div>
+      </div>
+      <div class="slide-footer"><span>アジェンダ</span><span>2 / 24</span></div>
+    </div>
+
+    <!-- NOTE: セクション1ヘッダー：Why Now -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 1</div>
+      <div class="cover-title">Why Now</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">なぜ今 Claude Code を学ぶのか</div>
+    </div>
+
+    <!-- NOTE: AI利用格差の現状 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">AI利用の有無が生産性格差を生んでいる</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">議事録：</span>AI利用→30分 ／ 非利用→2〜3時間</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">週報下書き：</span>AI利用→10分 ／ 非利用→1時間</span></li>
+        <li class="bullet"><span class="dot"></span><span>この差が毎日積み重なり、1年で大きな格差になる</span></li>
+        <li class="bullet"><span class="dot"></span><span>特別な才能の差ではなく「使い始めた」かどうかの差</span></li>
+      </ul>
+      <div class="emph">今が動き出すタイミング</div>
+      <div class="slide-footer"><span>Why Now</span><span>4 / 24</span></div>
+    </div>
+
+    <!-- NOTE: 非エンジニアこそ有利 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">業務知識を持つあなたが有利</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>エンジニアはツールを知るが業務文脈を知らない</span></li>
+        <li class="bullet"><span class="dot"></span><span>業務を知る人こそ「何を頼むか」が明確になる</span></li>
+        <li class="bullet"><span class="dot"></span><span>AIへの指示の質は業務理解度に直結する</span></li>
+        <li class="bullet"><span class="dot"></span><span>今日ここから「使い始めた側」になれる</span></li>
+      </ul>
+      <div class="slide-footer"><span>Why Now</span><span>5 / 24</span></div>
+    </div>
+
+    <!-- NOTE: 3回で得られること -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">3回で「業務で使える」状態になる</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">1</span><span class="card-body"><strong>第1回：</strong>Claude Codeとは何か・安全ルール3つ・セットアップ完了</span></div>
+        <div class="card-item"><span class="card-num">2</span><span class="card-body"><strong>第2回：</strong>動作原理・CLAUDE.md・スキル・音声入力・演習</span></div>
+        <div class="card-item"><span class="card-num">3</span><span class="card-body"><strong>第3回：</strong>繰り返し作業の自動化・継続活用プラン完成</span></div>
+      </div>
+      <div class="slide-footer"><span>Why Now</span><span>6 / 24</span></div>
+    </div>
+
+    <!-- NOTE: セクション2ヘッダー：Claude Code とは -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 2</div>
+      <div class="cover-title">Claude Code とは何か</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">ChatGPT 等との違いを理解する</div>
+    </div>
+
+    <!-- NOTE: 3ツール比較 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">動詞で覚える3つの違い</div>
+      <div class="row-table">
+        <div class="row-item"><span class="row-key">ChatGPT</span><span class="row-val">「相談する」→ 会話でアドバイス・文章提案</span></div>
+        <div class="row-item"><span class="row-key">Copilot</span><span class="row-val">「補完する」→ コード・文書の入力補完</span></div>
+        <div class="row-item"><span class="row-key">Claude Code</span><span class="row-val">「実行する」→ ファイルを読む・編集・保存する</span></div>
+      </div>
+      <div class="emph">Claude Code は「相談」ではなく「実行」する</div>
+      <div class="slide-footer"><span>Claude Code とは</span><span>8 / 24</span></div>
+    </div>
+
+    <!-- NOTE: Claude Codeだけができること -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">ファイルを直接操作できる唯一のツール</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>ファイルを開いて読む・内容を処理する</span></li>
+        <li class="bullet"><span class="dot"></span><span>新しいファイルを作って保存する</span></li>
+        <li class="bullet"><span class="dot"></span><span>複数ファイルをまたいで一括処理する</span></li>
+        <li class="bullet"><span class="dot"></span><span>指示した作業を自動で代行する</span></li>
+      </ul>
+      <div class="slide-footer"><span>Claude Code とは</span><span>9 / 24</span></div>
+    </div>
+
+    <!-- NOTE: CLAUDE.mdと料金 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">CLAUDE.md と料金について</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">CLAUDE.md：</span>Claude Codeへの「事前指示書」となる設定ファイル</span></li>
+        <li class="bullet"><span class="dot"></span><span>一度書けば毎回同じ指示を繰り返さなくて済む</span></li>
+        <li class="bullet"><span class="dot"></span><span>詳しい使い方は第2回で実際に体験する</span></li>
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">料金：</span>Claude Pro（$20/月〜）以上が必要</span></li>
+      </ul>
+      <div class="slide-footer"><span>Claude Code とは</span><span>10 / 24</span></div>
+    </div>
+
+    <!-- NOTE: セクション3ヘッダー：安全ルール -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 3</div>
+      <div class="cover-title">安全ルール体感</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">社内で使う前に知っておくべきこと</div>
+    </div>
+
+    <!-- NOTE: 安全ルール3つ概要 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">社内利用の安全ルール3つ</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">①</span><span class="card-body">機密データを渡さない</span></div>
+        <div class="card-item"><span class="card-num">②</span><span class="card-body">確認画面を読まずに進まない</span></div>
+        <div class="card-item"><span class="card-num">③</span><span class="card-body">作業専用フォルダ（claude_work）を使う</span></div>
+      </div>
+      <div class="slide-footer"><span>安全ルール</span><span>12 / 24</span></div>
+    </div>
+
+    <!-- NOTE: ルール① -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">ルール①　機密データを渡さない</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>指示・ファイル内容はAnthropicサーバーに送信される</span></li>
+        <li class="bullet"><span class="dot"></span><span>顧客リスト・個人情報・社外秘資料はNG</span></li>
+        <li class="bullet"><span class="dot"></span><span>判断基準：「漏れたら困るか？」と自問する</span></li>
+        <li class="bullet"><span class="dot"></span><span>迷ったら使わない・上長に確認が鉄則</span></li>
+      </ul>
+      <div class="emph">迷ったら使わない</div>
+      <div class="slide-footer"><span>安全ルール</span><span>13 / 24</span></div>
+    </div>
+
+    <!-- NOTE: ルール② -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">ルール②　確認画面を読まずに進まない</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>ターミナルからの削除はゴミ箱に入らない</span></li>
+        <li class="bullet"><span class="dot"></span><span>確認画面が最後のチャンス：必ず読む</span></li>
+        <li class="bullet"><span class="dot"></span><span>対策：作業前に重要ファイルのコピーを取る</span></li>
+        <li class="bullet"><span class="dot"></span><span>「迷ったら Reject（拒否）」が基本スタンス</span></li>
+      </ul>
+      <div class="slide-footer"><span>安全ルール</span><span>14 / 24</span></div>
+    </div>
+
+    <!-- NOTE: ルール③ -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">ルール③　作業専用フォルダを使う</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span>デスクトップに「claude_work」フォルダを作成</span></li>
+        <li class="bullet"><span class="dot"></span><span>ファイルはコピーしてから入れる（移動禁止）</span></li>
+        <li class="bullet"><span class="dot"></span><span>claude_work の外のファイルには触れさせない</span></li>
+        <li class="bullet"><span class="dot"></span><span>「実験エリア」と「本番エリア」を分けるイメージ</span></li>
+      </ul>
+      <div class="slide-footer"><span>安全ルール</span><span>15 / 24</span></div>
+    </div>
+
+    <!-- NOTE: ワーク1 安全チェックシート -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 5分　個人ワーク</div>
+      <div class="slide-title">ワーク1　安全チェックシートに記入</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>3つのルールそれぞれについて「ルール名」と「なぜそのリスクが起きるか」を書く</span></li>
+        <li class="step"><span class="step-num">2</span><span>「自分の業務での具体的な注意点」を各ルールに書く</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「自分の業務」欄が具体的に書けているか</span>
+      </div>
+      <div class="slide-footer"><span>安全ルール</span><span>16 / 24</span></div>
+    </div>
+
+    <!-- NOTE: セクション4ヘッダー：セットアップ -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 4</div>
+      <div class="cover-title">セットアップ実践</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">自分のPCにインストールしよう</div>
+    </div>
+
+    <!-- NOTE: インストール手順（Windows） -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">インストール手順（Windows）</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">①</span><span class="card-body">PowerShell を「管理者として実行」で開く</span></div>
+        <div class="card-item"><span class="card-num">②</span><span class="card-body"><code style="background:#e8eef8;padding:1px 6px;border-radius:3px;font-size:0.88em;">winget install Anthropic.ClaudeCode</code> を実行</span></div>
+        <div class="card-item"><span class="card-num">③</span><span class="card-body"><code style="background:#e8eef8;padding:1px 6px;border-radius:3px;font-size:0.88em;">claude --version</code> でバージョン確認（正常インストール確認）</span></div>
+      </div>
+      <div class="slide-footer"><span>セットアップ</span><span>18 / 24</span></div>
+    </div>
+
+    <!-- NOTE: 作業フォルダ作成・認証・起動 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">作業フォルダの作成・認証・起動</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">④</span><span class="card-body">デスクトップに「claude_work」フォルダを作成する</span></div>
+        <div class="card-item"><span class="card-num">⑤</span><span class="card-body"><code style="background:#e8eef8;padding:1px 6px;border-radius:3px;font-size:0.88em;">cd Desktop\claude_work</code> でフォルダに移動する</span></div>
+        <div class="card-item"><span class="card-num">⑥</span><span class="card-body"><code style="background:#e8eef8;padding:1px 6px;border-radius:3px;font-size:0.88em;">claude</code> を実行 → ブラウザでAnthropicアカウントにログイン</span></div>
+        <div class="card-item"><span class="card-num">⑦</span><span class="card-body">「こんにちは」と入力して返事が返ってきたら成功！</span></div>
+      </div>
+      <div class="slide-footer"><span>セットアップ</span><span>19 / 24</span></div>
+    </div>
+
+    <!-- NOTE: ワーク2 セットアップ実践 -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 27分　ハンズオン</div>
+      <div class="slide-title">ワーク2　セットアップ実践</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>講師の画面共有に合わせてインストールコマンドを実行する</span></li>
+        <li class="step"><span class="step-num">2</span><span>claude_work フォルダを作成して <code style="background:rgba(27,42,74,0.1);padding:1px 5px;border-radius:3px;">claude</code> コマンドで起動する</span></li>
+        <li class="step"><span class="step-num">3</span><span>「こんにちは」と入力して返事を確認する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：返事が返ってきたらチャットに「起動しました！」と書く</span>
+      </div>
+      <div class="slide-footer"><span>セットアップ</span><span>20 / 24</span></div>
+    </div>
+
+    <!-- NOTE: セクション5ヘッダー：まとめ -->
+    <div class="slide slide-cover">
+      <div class="grid-bg"></div>
+      <div class="cover-badge">セクション 5</div>
+      <div class="cover-title">まとめと宿題</div>
+      <div class="cover-divider"></div>
+      <div class="cover-sub">今日学んだことを整理して次回へ</div>
+    </div>
+
+    <!-- NOTE: 今日のポイント整理 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">今日のポイント整理</div>
+      <div class="card-list">
+        <div class="card-item"><span class="card-num">①</span><span class="card-body"><strong>なぜ今：</strong>AI格差は広がっている。今動くことに意味がある</span></div>
+        <div class="card-item"><span class="card-num">②</span><span class="card-body"><strong>安全ルール3つ：</strong>機密NG・確認してから進む・専用フォルダを使う</span></div>
+        <div class="card-item"><span class="card-num">③</span><span class="card-body"><strong>セットアップ：</strong>Claude Code が起動した。今日が出発点</span></div>
+      </div>
+      <div class="slide-footer"><span>まとめ</span><span>22 / 24</span></div>
+    </div>
+
+    <!-- NOTE: ワーク3 宿題シート -->
+    <div class="slide slide-work">
+      <div class="grid-bg"></div>
+      <div class="work-badge">⏱ 3分　個人ワーク</div>
+      <div class="slide-title">ワーク3　宿題シート記入</div>
+      <ul class="steps">
+        <li class="step"><span class="step-num">1</span><span>「次回までに試してみたいこと」を1つ書く（例：議事録整理・週報下書き）</span></li>
+        <li class="step"><span class="step-num">2</span><span>書けたらチャットに投稿する</span></li>
+      </ul>
+      <div class="check-row">
+        <span class="check-icon">✓</span>
+        <span class="check-text">チェックポイント：「何を・誰のために」が書けているか</span>
+      </div>
+      <div class="slide-footer"><span>まとめ</span><span>23 / 24</span></div>
+    </div>
+
+    <!-- NOTE: 次回予告 -->
+    <div class="slide slide-content">
+      <div class="grid-bg"></div>
+      <div class="slide-title">次回予告 — 第2回</div>
+      <ul class="bullets">
+        <li class="bullet"><span class="dot"></span><span><span class="bstrong">テーマ：</span>仕組みと便利機能を体験する</span></li>
+        <li class="bullet"><span class="dot"></span><span>CLAUDE.md を実際に書いて動作確認する</span></li>
+        <li class="bullet"><span class="dot"></span><span>スキル呼び出しと音声入力を体験する</span></li>
+        <li class="bullet"><span class="dot"></span><span>今日起動できなかった方は冒頭 Q&amp;A で質問 OK</span></li>
+      </ul>
+      <div class="slide-footer"><span>まとめ</span><span>24 / 24</span></div>
+    </div>
+
+  </div><!-- /slide-wrap -->
+</div><!-- /stage -->
+
+<nav class="nav">
+  <button class="nav-btn" id="prev">&#8592;</button>
+  <span class="nav-counter" id="counter">1 / 24</span>
+  <button class="nav-btn" id="next">&#8594;</button>
+</nav>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+const total = slides.length;
+let current = 0;
+
+function show(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${total}`;
+  progress.style.width = `${((current + 1) / total) * 100}%`;
+}
+
+document.getElementById('prev').addEventListener('click', () => show(current - 1));
+document.getElementById('next').addEventListener('click', () => show(current + 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+});
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+});
+
+show(0);
+</script>
+</body>
+</html>

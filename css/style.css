@@ -1154,3 +1154,62 @@ a {
     gap: 16px;
   }
 }
+
+/* ========== CLAUDE CODE 研修テーマ ========== */
+:root {
+  --teal: #2EC4B6;
+  --teal-dark: #0D9488;
+  --teal-pale: #CCFBF1;
+  --teal-bg: #F0FDFA;
+}
+
+/* カードバッジ */
+.course-claudecode .course-badge {
+  background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+}
+
+/* サムネイルプレースホルダー */
+.course-thumbnail-claudecode {
+  background: linear-gradient(135deg, #1B2A4A 0%, #0D9488 100%);
+  color: rgba(255,255,255,0.85);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* グリッド3列対応 */
+.course-grid-3 {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* コースヒーロー */
+.course-hero-claudecode {
+  background: linear-gradient(135deg, #1B2A4A 0%, #134E4A 60%, #0D9488 100%);
+}
+
+/* セッション番号 */
+.session-detail-number-claudecode {
+  background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+}
+
+/* ファイルタグ */
+.file-tag-claudecode {
+  background: var(--teal-pale);
+  color: var(--teal-dark);
+}
+
+/* ダウンロードセクション セッション見出し */
+.downloads-session-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--teal-pale);
+}
+
+/* DOCX フォーマットバッジ */
+.download-format-docx {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
